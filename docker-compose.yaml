@@ -1,0 +1,18 @@
+services:
+  headscale:
+    image: headscale/headscale:0.28.0
+    restart: unless-stopped
+    command: serve
+    volumes:
+      - ./config.yaml:/etc/headscale/config.yaml:ro
+      - ./acl.json:/etc/headscale/acl.json:ro
+      - headscale-data:/var/lib/headscale
+    ports:
+      - "8080:8080"    # control plane headscale; arahkan Cloudflared ke port ini
+      - "9090:9090"    # metrics Prometheus (opsional)
+      - "50443:50443"  # gRPC remote control (opsional; jangan expose publik)
+    environment:
+      - TZ=Asia/Makassar
+
+volumes:
+  headscale-data:

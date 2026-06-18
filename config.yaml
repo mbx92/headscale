@@ -1,0 +1,64 @@
+# =========================================================================
+# WAJIB DIUBAH sebelum deploy:
+#   1. server_url  -> domain publik yang akan dipakai client untuk connect
+#                      (kalau pakai Cloudflare Tunnel, ini domain Tunnel-nya)
+#   2. dns.base_domain -> domain untuk MagicDNS, HARUS beda dari server_url
+# =========================================================================
+
+server_url: https://hs.baliroyalhospital.co.id
+listen_addr: 0.0.0.0:8080
+metrics_listen_addr: 0.0.0.0:9090
+
+# gRPC dipakai untuk remote control via CLI headscale dari luar container.
+# Kalau tidak perlu, boleh diabaikan (tetap aman karena default insecure=false).
+grpc_listen_addr: 0.0.0.0:50443
+grpc_allow_insecure: false
+
+noise:
+  private_key_path: /var/lib/headscale/noise_private.key
+
+# Range IP tailnet, default sudah sesuai standar Tailscale, jangan diubah
+# kecuali tahu konsekuensinya.
+prefixes:
+  v4: 100.64.0.0/10
+  v6: fd7a:115c:a1e0::/48
+
+# DERP relay - dipakai kalau koneksi direct P2P gagal (NAT berat dll).
+# Pakai relay publik Tailscale, gratis dan tidak perlu setup tambahan.
+derp:
+  server:
+    enabled: false
+  urls:
+    - https://controlplane.tailscale.com/derpmap/default
+  auto_update_enabled: true
+  update_frequency: 24h
+
+# SQLite cukup untuk hampir semua skala pemakaian (rekomendasi resmi
+# Headscale sekarang). Postgres sengaja TIDAK dipakai karena project
+# Headscale sendiri sudah mendeprecate dukungan optimal untuk Postgres.
+database:
+  type: sqlite
+  sqlite:
+    path: /var/lib/headscale/db.sqlite
+    write_ahead_log: true
+
+log:
+  level: info
+  format: text
+
+# ACL/policy disimpan di file terpisah, lihat acl.json
+policy:
+  mode: file
+  path: /etc/headscale/acl.json
+
+dns:
+  magic_dns: true
+  base_domain: ts.baliroyalhospital.co.id
+  override_local_dns: true
+  nameservers:
+    global:
+      - 1.1.1.1
+      - 8.8.8.8
+
+unix_socket: /var/run/headscale/headscale.sock
+unix_socket_permission: "0770"
