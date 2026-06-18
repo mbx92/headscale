@@ -33,12 +33,18 @@ dns:
 
 Deploy sebagai `Docker Compose` menggunakan [docker-compose.yaml](C:/Users/pande/Downloads/headscale/docker-compose.yaml).
 
-Compose ini menjalankan 2 service dalam satu stack:
+Compose ini hanya menjalankan `headscale`.
 
-- `headscale`
-- `cloudflared`
+Port yang dibuka:
 
-`headscale` tidak mem-publish host port. Ia hanya di-`expose` ke network internal Docker pada port `8080`, lalu `cloudflared` akan meneruskan trafik publik ke sana.
+- `127.0.0.1:18080:8080`
+
+Artinya:
+
+- `headscale` listen normal di port container `8080`
+- host server membuka port lokal `18080`
+- port itu tidak terekspos publik karena hanya bind ke `127.0.0.1`
+- `cloudflared` yang berjalan sebagai resource terpisah bisa diarahkan ke `http://localhost:18080`
 
 ## 3. Buat Cloudflare Tunnel
 
@@ -46,26 +52,16 @@ Di Cloudflare Zero Trust, buat public hostname:
 
 - Hostname: `hs.domainsaya.com`
 - Service type: `HTTP`
-- Service URL: `http://headscale:8080`
+- Service URL: `http://localhost:18080`
 
-Karena `cloudflared` ada dalam stack yang sama, ia bisa reach service `headscale` langsung lewat nama servicenya.
+Karena `cloudflared` berjalan terpisah dari `headscale`, ia diarahkan ke host port lokal ini.
 
 ## 4. Catatan penting Cloudflare
 
-- Compose ini tidak mengekspos host port apa pun untuk `headscale`, `50443`, maupun `9090`.
+- Compose ini tidak mengekspos `50443` dan `9090`, dan hanya membuka `18080` pada `127.0.0.1`.
 - `Headscale` butuh endpoint HTTPS stabil; `Cloudflared Tunnel` cocok untuk ini.
 - MagicDNS domain sebaiknya berbeda dari subdomain control plane.
 - DERP bawaan di config ini memakai DERP publik Tailscale, jadi Anda tidak perlu publish UDP tambahan untuk server Headscale.
-
-## 4a. Environment variable di Coolify
-
-Set environment variable ini pada aplikasi `Docker Compose` di Coolify:
-
-```txt
-CLOUDFLARED_TUNNEL_TOKEN=eyJ...
-```
-
-Isi dengan token tunnel dari Cloudflare Zero Trust.
 
 ## 5. Verifikasi setelah deploy
 
