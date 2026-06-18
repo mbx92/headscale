@@ -33,38 +33,39 @@ dns:
 
 Deploy sebagai `Docker Compose` menggunakan [docker-compose.yaml](C:/Users/pande/Downloads/headscale/docker-compose.yaml).
 
-Compose ini sengaja hanya membuka:
+Compose ini menjalankan 2 service dalam satu stack:
 
-- `127.0.0.1:8080:8080`
+- `headscale`
+- `cloudflared`
 
-Artinya:
-
-- Headscale tetap bisa diakses lokal dari host server
-- port tidak terekspos langsung ke internet
-- `cloudflared` di host yang sama bisa diarahkan ke `http://127.0.0.1:8080`
-
-Jika `cloudflared` berjalan sebagai container terpisah dan bukan process di host, Anda perlu menyesuaikan lagi networking-nya agar `cloudflared` bisa reach service `headscale`.
+`headscale` tidak mem-publish host port. Ia hanya di-`expose` ke network internal Docker pada port `8080`, lalu `cloudflared` akan meneruskan trafik publik ke sana.
 
 ## 3. Buat Cloudflare Tunnel
 
-Di sisi `cloudflared`, buat public hostname:
+Di Cloudflare Zero Trust, buat public hostname:
 
 - Hostname: `hs.domainsaya.com`
 - Service type: `HTTP`
-- Service URL: `http://127.0.0.1:8080` jika `cloudflared` berjalan di host server yang sama
+- Service URL: `http://headscale:8080`
 
-Jika `cloudflared` berjalan sebagai container terpisah, arahkan ke host internal yang bisa dijangkau dari container `cloudflared`, misalnya:
-
-```txt
-http://<ip-atau-host-internal>:8080
-```
+Karena `cloudflared` ada dalam stack yang sama, ia bisa reach service `headscale` langsung lewat nama servicenya.
 
 ## 4. Catatan penting Cloudflare
 
-- Compose ini tidak mengekspos `50443` dan `9090` untuk mengurangi permukaan serangan.
+- Compose ini tidak mengekspos host port apa pun untuk `headscale`, `50443`, maupun `9090`.
 - `Headscale` butuh endpoint HTTPS stabil; `Cloudflared Tunnel` cocok untuk ini.
 - MagicDNS domain sebaiknya berbeda dari subdomain control plane.
 - DERP bawaan di config ini memakai DERP publik Tailscale, jadi Anda tidak perlu publish UDP tambahan untuk server Headscale.
+
+## 4a. Environment variable di Coolify
+
+Set environment variable ini pada aplikasi `Docker Compose` di Coolify:
+
+```txt
+CLOUDFLARED_TUNNEL_TOKEN=eyJ...
+```
+
+Isi dengan token tunnel dari Cloudflare Zero Trust.
 
 ## 5. Verifikasi setelah deploy
 

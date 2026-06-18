@@ -7,10 +7,19 @@ services:
       - ./config.yaml:/etc/headscale/config.yaml:ro
       - ./acl.json:/etc/headscale/acl.json:ro
       - headscale-data:/var/lib/headscale
-    ports:
-      - "127.0.0.1:8080:8080" # control plane; arahkan Cloudflared ke host lokal port 8080
     environment:
       - TZ=Asia/Makassar
+    expose:
+      - "8080"
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.6.1
+    restart: unless-stopped
+    depends_on:
+      - headscale
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN:?}
 
 volumes:
   headscale-data:
