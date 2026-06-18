@@ -33,6 +33,8 @@ dns:
 
 Deploy sebagai `Docker Compose` menggunakan [docker-compose.yaml](C:/Users/pande/Downloads/headscale/docker-compose.yaml).
 
+Config dibundel ke image saat build melalui [Dockerfile](C:/Users/pande/Downloads/headscale/Dockerfile:1), jadi `Coolify` tidak perlu bind-mount `config.yaml` dan `acl.json` dari repo saat runtime.
+
 Compose ini hanya menjalankan `headscale`.
 
 Port yang dibuka:
@@ -45,6 +47,7 @@ Artinya:
 - host server membuka port lokal `18080`
 - port itu tidak terekspos publik karena hanya bind ke `127.0.0.1`
 - `cloudflared` yang berjalan sebagai resource terpisah bisa diarahkan ke `http://localhost:18080`
+- perubahan `config.yaml` atau `acl.json` memerlukan rebuild/redeploy aplikasi
 
 ## 3. Buat Cloudflare Tunnel
 
