@@ -8,9 +8,7 @@ services:
       - ./acl.json:/etc/headscale/acl.json:ro
       - headscale-data:/var/lib/headscale
     ports:
-      - "8080:8080"    # control plane headscale; arahkan Cloudflared ke port ini
-      - "9090:9090"    # metrics Prometheus (opsional)
-      - "50443:50443"  # gRPC remote control (opsional; jangan expose publik)
+      - "127.0.0.1:8080:8080" # control plane; arahkan Cloudflared ke host lokal port 8080
     environment:
       - TZ=Asia/Makassar
 

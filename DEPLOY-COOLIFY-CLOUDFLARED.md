@@ -33,13 +33,17 @@ dns:
 
 Deploy sebagai `Docker Compose` menggunakan [docker-compose.yaml](C:/Users/pande/Downloads/headscale/docker-compose.yaml).
 
-Port yang perlu dipakai:
+Compose ini sengaja hanya membuka:
 
-- `8080` untuk Headscale control plane
-- `9090` hanya jika ingin metrics
-- `50443` hanya jika memang perlu gRPC remote CLI
+- `127.0.0.1:8080:8080`
 
-Untuk deployment publik minimal, cukup route trafik publik ke `8080`.
+Artinya:
+
+- Headscale tetap bisa diakses lokal dari host server
+- port tidak terekspos langsung ke internet
+- `cloudflared` di host yang sama bisa diarahkan ke `http://127.0.0.1:8080`
+
+Jika `cloudflared` berjalan sebagai container terpisah dan bukan process di host, Anda perlu menyesuaikan lagi networking-nya agar `cloudflared` bisa reach service `headscale`.
 
 ## 3. Buat Cloudflare Tunnel
 
@@ -47,9 +51,9 @@ Di sisi `cloudflared`, buat public hostname:
 
 - Hostname: `hs.domainsaya.com`
 - Service type: `HTTP`
-- Service URL: `http://headscale:8080` jika `cloudflared` satu network/container dengan service `headscale`
+- Service URL: `http://127.0.0.1:8080` jika `cloudflared` berjalan di host server yang sama
 
-Jika `cloudflared` tidak satu docker network dengan Headscale, arahkan ke host internal yang bisa dijangkau dari container `cloudflared`, misalnya:
+Jika `cloudflared` berjalan sebagai container terpisah, arahkan ke host internal yang bisa dijangkau dari container `cloudflared`, misalnya:
 
 ```txt
 http://<ip-atau-host-internal>:8080
@@ -57,7 +61,7 @@ http://<ip-atau-host-internal>:8080
 
 ## 4. Catatan penting Cloudflare
 
-- Jangan expose `50443` ke internet kecuali Anda memang butuh dan tahu alurnya.
+- Compose ini tidak mengekspos `50443` dan `9090` untuk mengurangi permukaan serangan.
 - `Headscale` butuh endpoint HTTPS stabil; `Cloudflared Tunnel` cocok untuk ini.
 - MagicDNS domain sebaiknya berbeda dari subdomain control plane.
 - DERP bawaan di config ini memakai DERP publik Tailscale, jadi Anda tidak perlu publish UDP tambahan untuk server Headscale.
