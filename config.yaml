@@ -7,11 +7,11 @@
 
 server_url: https://hs.baliroyalhospital.co.id
 listen_addr: 0.0.0.0:8080
-metrics_listen_addr: 0.0.0.0:9090
+metrics_listen_addr: 127.0.0.1:9090
 
 # gRPC dipakai untuk remote control via CLI headscale dari luar container.
 # Kalau tidak perlu, boleh diabaikan (tetap aman karena default insecure=false).
-grpc_listen_addr: 0.0.0.0:50443
+grpc_listen_addr: 127.0.0.1:50443
 grpc_allow_insecure: false
 
 noise:
@@ -45,6 +45,14 @@ database:
 log:
   level: info
   format: text
+
+trusted_proxies:
+  - 127.0.0.1/32
+  - ::1/128
+  - 10.100.10.10/32
+
+tls_cert_path: ""
+tls_key_path: ""
 
 # ACL/policy disimpan di file terpisah, lihat acl.json
 policy:

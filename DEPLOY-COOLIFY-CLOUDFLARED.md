@@ -39,29 +39,27 @@ Compose ini hanya menjalankan `headscale`.
 
 Port yang dibuka:
 
-- `127.0.0.1:18080:8080`
+- `10.100.10.6:18080:8080`
 
 Artinya:
 
 - `headscale` listen normal di port container `8080`
-- host server membuka port lokal `18080`
-- port itu tidak terekspos publik karena hanya bind ke `127.0.0.1`
-- `cloudflared` yang berjalan sebagai resource terpisah bisa diarahkan ke `http://localhost:18080`
+- host `Coolify` membuka `10.100.10.6:18080`
+- port ini hanya bisa diakses lewat IP internal server `Coolify`
+- reverse proxy terpisah di `10.100.10.10` dapat diarahkan ke `http://10.100.10.6:18080`
 - perubahan `config.yaml` atau `acl.json` memerlukan rebuild/redeploy aplikasi
 
 ## 3. Buat Cloudflare Tunnel
 
-Di Cloudflare Zero Trust, buat public hostname:
+Jika memakai reverse proxy terpisah seperti `Nginx Proxy Manager`, arahkan upstream ke:
 
-- Hostname: `hs.domainsaya.com`
-- Service type: `HTTP`
-- Service URL: `http://localhost:18080`
-
-Karena `cloudflared` berjalan terpisah dari `headscale`, ia diarahkan ke host port lokal ini.
+```txt
+http://10.100.10.6:18080
+```
 
 ## 4. Catatan penting Cloudflare
 
-- Compose ini tidak mengekspos `50443` dan `9090`, dan hanya membuka `18080` pada `127.0.0.1`.
+- Compose ini tidak mengekspos `50443` dan `9090`, dan hanya membuka `18080` pada IP internal `10.100.10.6`.
 - `Headscale` butuh endpoint HTTPS stabil; `Cloudflared Tunnel` cocok untuk ini.
 - MagicDNS domain sebaiknya berbeda dari subdomain control plane.
 - DERP bawaan di config ini memakai DERP publik Tailscale, jadi Anda tidak perlu publish UDP tambahan untuk server Headscale.

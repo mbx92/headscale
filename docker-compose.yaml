@@ -7,7 +7,7 @@ services:
     volumes:
       - headscale-data:/var/lib/headscale
     ports:
-      - "127.0.0.1:18080:8080" # hanya untuk diakses cloudflared terpisah di host yang sama
+      - "10.100.10.6:18080:8080" # hanya untuk diakses reverse proxy di 10.100.10.10
     environment:
       - TZ=Asia/Makassar
 
